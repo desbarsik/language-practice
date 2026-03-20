@@ -31,6 +31,10 @@ export const LearningSession: React.FC = () => {
   const handleOptionSelect = (option: string) => {
     if (answered) return;
     setSelectedOption(option);
+    // Автоматически переворачиваем карточку при выборе ответа
+    if (!isFlipped) {
+      setIsFlipped(true);
+    }
   };
 
   const handleCheck = (_sentence: string, isCorrect: boolean) => {
@@ -39,9 +43,11 @@ export const LearningSession: React.FC = () => {
     setAnswered(true);
   };
 
-  const handleFeedback = (isCorrect: boolean) => {
+  const handleFeedback = (_isCorrect: boolean) => {
     if (!answered && selectedOption) {
-      submitAnswer(isCorrect, currentQuestion.id);
+      // Проверяем, правильный ли выбран ответ
+      const isActuallyCorrect = selectedOption === currentQuestion.correct_answer;
+      submitAnswer(isActuallyCorrect, currentQuestion.id);
       setAnswered(true);
     }
   };
@@ -149,7 +155,7 @@ export const LearningSession: React.FC = () => {
       {/* Кнопки обратной связи */}
       {isFlipped && currentQuestion.type === 'multiple_choice' && (
         <>
-          {!answered && selectedOption && (
+          {!answered && (
             <FeedbackButtons
               onCorrect={() => handleFeedback(true)}
               onIncorrect={() => handleFeedback(false)}
