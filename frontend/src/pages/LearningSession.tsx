@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { Flashcard } from '../components/learning/Flashcard';
 import { MultipleChoice } from '../components/learning/MultipleChoice';
@@ -18,23 +18,20 @@ export const LearningSession: React.FC = () => {
     resetSession,
   } = useAppStore();
 
-  const [isFlipped, setIsFlipped] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [answered, setAnswered] = useState(false);
 
   const currentQuestion = questions[currentQuestionIndex];
 
-  const handleFlip = () => {
-    setIsFlipped(!isFlipped);
-  };
+  // Сброс состояния при смене вопроса
+  useEffect(() => {
+    setSelectedOption(null);
+    setAnswered(false);
+  }, [currentQuestionIndex]);
 
   const handleOptionSelect = (option: string) => {
     if (answered) return;
     setSelectedOption(option);
-    // Автоматически переворачиваем карточку при выборе ответа
-    if (!isFlipped) {
-      setIsFlipped(true);
-    }
   };
 
   const handleCheck = (_sentence: string, isCorrect: boolean) => {
@@ -43,7 +40,7 @@ export const LearningSession: React.FC = () => {
     setAnswered(true);
   };
 
-  const handleFeedback = (_isCorrect: boolean) => {
+  const handleFeedback = () => {
     if (!answered && selectedOption) {
       // Проверяем, правильный ли выбран ответ
       const isActuallyCorrect = selectedOption === currentQuestion.correct_answer;
@@ -53,9 +50,6 @@ export const LearningSession: React.FC = () => {
   };
 
   const handleNext = () => {
-    setIsFlipped(false);
-    setSelectedOption(null);
-    setAnswered(false);
     nextQuestion();
   };
 
@@ -109,6 +103,9 @@ export const LearningSession: React.FC = () => {
 
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
+  // Показываем ответ только после того, как пользователь ответил
+  const displayAnswer = answered ? currentQuestion.correct_answer : '';
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Прогресс бар */}
@@ -126,10 +123,9 @@ export const LearningSession: React.FC = () => {
       {/* Карточка с вопросом */}
       <Flashcard
         question={currentQuestion.question_text}
-        answer={currentQuestion.correct_answer}
-        onFlip={handleFlip}
+        answer={displayAnswer}
       >
-        {currentQuestion.type === 'multiple_choice' && !isFlipped && (
+        {currentQuestion.type === 'multiple_choice' && (
           <div className="mt-4 w-full">
             <MultipleChoice
               question=""
@@ -140,7 +136,7 @@ export const LearningSession: React.FC = () => {
             />
           </div>
         )}
-        {currentQuestion.type === 'construction' && !isFlipped && (
+        {currentQuestion.type === 'construction' && (
           <div className="mt-4 w-full">
             <SentenceBuilder
               words={currentQuestion.options as string[]}
@@ -152,30 +148,19 @@ export const LearningSession: React.FC = () => {
         )}
       </Flashcard>
 
-      {/* Кнопки обратной связи */}
-      {isFlipped && currentQuestion.type === 'multiple_choice' && (
-        <>
-          {!answered && (
-            <FeedbackButtons
-              onCorrect={() => handleFeedback(true)}
-              onIncorrect={() => handleFeedback(false)}
-            />
-          )}
-          {answered && (
-            <div className="flex justify-center">
-              <Button variant="primary" size="lg" onClick={handleNext}>
-                {currentQuestionIndex < questions.length - 1 ? 'Следующий вопрос' : 'Завершить'}
-              </Button>
-            </div>
-          )}
-        </>
+      {/* Кнопки обратной связи для Multiple Choice */}
+      {currentQuestion.type === 'multiple_choice' && selectedOption && !answered && (
+        <FeedbackButtons
+          onCorrect={handleFeedback}
+          onIncorrect={handleFeedback}
+        />
       )}
 
-      {/* Для SentenceBuilder показываем кнопку Next после ответа */}
-      {currentQuestion.type === 'construction' && answered && (
+      {/* Кнопка следующего вопроса */}
+      {answered && (
         <div className="flex justify-center">
           <Button variant="primary" size="lg" onClick={handleNext}>
-            {currentQuestionIndex < questions.length - 1 ? 'Следующий вопрос' : 'Завершить'}
+            {currentQuestionIndex < questions.length - 1 ? 'Следующий вопрос →' : 'Завершить сессию ✓'}
           </Button>
         </div>
       )}
