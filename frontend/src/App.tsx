@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/common/Layout';
 import { Home } from './pages/Home';
-import { Learning } from './pages/Learning';
+import { LearningSession } from './pages/LearningSession';
 import { Statistics } from './pages/Statistics';
 
 function App() {
@@ -10,7 +10,7 @@ function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/learning" element={<Learning />} />
+          <Route path="/learning" element={<LearningSession />} />
           <Route path="/statistics" element={<Statistics />} />
         </Routes>
       </Layout>

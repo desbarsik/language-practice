@@ -1,0 +1,167 @@
+import type { Question } from '../types';
+
+export const mockQuestions: Question[] = [
+  // Beginner - Multiple Choice
+  {
+    id: '1',
+    topic_id: 'travel',
+    type: 'multiple_choice',
+    question_text: 'Как переводится слово "Hello"?',
+    correct_answer: 'Привет',
+    options: ['Пока', 'Привет', 'Спасибо', 'Пожалуйста'],
+    level: 'Beginner',
+  },
+  {
+    id: '2',
+    topic_id: 'travel',
+    type: 'multiple_choice',
+    question_text: 'Выберите правильный перевод: "Good morning"',
+    correct_answer: 'Доброе утро',
+    options: ['Добрый вечер', 'Доброе утро', 'Спокойной ночи', 'Добрый день'],
+    level: 'Beginner',
+  },
+  {
+    id: '3',
+    topic_id: 'food',
+    type: 'multiple_choice',
+    question_text: 'Что означает слово "Apple"?',
+    correct_answer: 'Яблоко',
+    options: ['Апельсин', 'Яблоко', 'Банан', 'Груша'],
+    level: 'Beginner',
+  },
+  {
+    id: '4',
+    topic_id: 'food',
+    type: 'multiple_choice',
+    question_text: 'Как сказать "Вода" по-английски?',
+    correct_answer: 'Water',
+    options: ['Fire', 'Earth', 'Water', 'Air'],
+    level: 'Beginner',
+  },
+  // Beginner - Construction
+  {
+    id: '5',
+    topic_id: 'travel',
+    type: 'construction',
+    question_text: 'Составьте предложение: "Я студент"',
+    correct_answer: 'I am a student',
+    options: ['I', 'am', 'a', 'student', 'the', 'is'],
+    level: 'Beginner',
+  },
+  {
+    id: '6',
+    topic_id: 'food',
+    type: 'construction',
+    question_text: 'Составьте предложение: "Я люблю пиццу"',
+    correct_answer: 'I love pizza',
+    options: ['I', 'love', 'pizza', 'hate', 'eat', 'like'],
+    level: 'Beginner',
+  },
+  // Intermediate - Multiple Choice
+  {
+    id: '7',
+    topic_id: 'business',
+    type: 'multiple_choice',
+    question_text: 'Что означает "Meeting"?',
+    correct_answer: 'Встреча/Совещание',
+    options: ['Письмо', 'Встреча/Совещание', 'Звонок', 'Документ'],
+    level: 'Intermediate',
+  },
+  {
+    id: '8',
+    topic_id: 'business',
+    type: 'multiple_choice',
+    question_text: 'Выберите синоним слова "Important"',
+    correct_answer: 'Significant',
+    options: ['Trivial', 'Significant', 'Minor', 'Simple'],
+    level: 'Intermediate',
+  },
+  {
+    id: '9',
+    topic_id: 'travel',
+    type: 'multiple_choice',
+    question_text: 'Что такое "Accommodation"?',
+    correct_answer: 'Размещение/Жильё',
+    options: ['Транспорт', 'Размещение/Жильё', 'Питание', 'Экскурсия'],
+    level: 'Intermediate',
+  },
+  // Intermediate - Construction
+  {
+    id: '10',
+    topic_id: 'business',
+    type: 'construction',
+    question_text: 'Составьте предложение: "У нас встреча завтра"',
+    correct_answer: 'We have a meeting tomorrow',
+    options: ['We', 'have', 'a', 'meeting', 'tomorrow', 'yesterday', 'today'],
+    level: 'Intermediate',
+  },
+  {
+    id: '11',
+    topic_id: 'travel',
+    type: 'construction',
+    question_text: 'Составьте предложение: "Где находится отель?"',
+    correct_answer: 'Where is the hotel',
+    options: ['Where', 'is', 'the', 'hotel', 'what', 'when', 'how'],
+    level: 'Intermediate',
+  },
+  // Advanced - Multiple Choice
+  {
+    id: '12',
+    topic_id: 'business',
+    type: 'multiple_choice',
+    question_text: 'Что означает "Ubiquitous"?',
+    correct_answer: 'Вездесущий',
+    options: ['Редкий', 'Вездесущий', 'Обычный', 'Уникальный'],
+    level: 'Advanced',
+  },
+  {
+    id: '13',
+    topic_id: 'grammar',
+    type: 'multiple_choice',
+    question_text: 'Выберите правильную форму: "If I ___ you, I would go"',
+    correct_answer: 'were',
+    options: ['was', 'were', 'am', 'been'],
+    level: 'Advanced',
+  },
+  {
+    id: '14',
+    topic_id: 'grammar',
+    type: 'multiple_choice',
+    question_text: 'Что такое "Phrasal verb"?',
+    correct_answer: 'Фразовый глагол',
+    options: ['Правильный глагол', 'Фразовый глагол', 'Неправильный глагол', 'Вспомогательный глагол'],
+    level: 'Advanced',
+  },
+  // Advanced - Construction
+  {
+    id: '15',
+    topic_id: 'business',
+    type: 'construction',
+    question_text: 'Составьте предложение: "Мне нужно подтвердить встречу"',
+    correct_answer: 'I need to confirm the meeting',
+    options: ['I', 'need', 'to', 'confirm', 'the', 'meeting', 'cancel', 'postpone'],
+    level: 'Advanced',
+  },
+  {
+    id: '16',
+    topic_id: 'grammar',
+    type: 'construction',
+    question_text: 'Составьте предложение: "Она работает здесь уже пять лет"',
+    correct_answer: 'She has been working here for five years',
+    options: ['She', 'has', 'been', 'working', 'here', 'for', 'five', 'years', 'is', 'since'],
+    level: 'Advanced',
+  },
+];
+
+export const topics = [
+  { id: 'travel', title: 'Путешествия', level: 'Beginner' as const },
+  { id: 'food', title: 'Еда', level: 'Beginner' as const },
+  { id: 'business', title: 'Бизнес', level: 'Intermediate' as const },
+  { id: 'grammar', title: 'Грамматика', level: 'Advanced' as const },
+];
+
+export const levels: Array<'Beginner' | 'Intermediate' | 'Advanced'> = [
+  'Beginner',
+  'Intermediate',
+  'Advanced',
+];
