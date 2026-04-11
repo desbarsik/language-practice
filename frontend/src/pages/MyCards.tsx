@@ -48,6 +48,45 @@ export const MyCards: React.FC = () => {
     navigate('/learning');
   };
 
+  const handleExport = () => {
+    if (cards.length === 0) return;
+    const data = JSON.stringify(cards, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `english-master-cards-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const imported: CustomCard[] = JSON.parse(ev.target?.result as string);
+        if (Array.isArray(imported)) {
+          imported.forEach((card) => {
+            userCardsService.addCard({
+              type: card.type,
+              front_text: card.front_text,
+              back_text: card.back_text,
+              hint: card.hint,
+            });
+          });
+          refreshCards();
+        }
+      } catch {
+        alert('Ошибка: неверный формат файла');
+      }
+    };
+    reader.readAsText(file);
+    // Reset input so same file can be re-imported
+    e.target.value = '';
+  };
+
   const totalCards = cards.length;
   const translationCount = cards.filter(c => c.type === 'translation').length;
   const sentenceCount = cards.filter(c => c.type === 'sentence').length;
@@ -139,12 +178,27 @@ export const MyCards: React.FC = () => {
             />
           </Card>
 
-          {/* Кнопка создания */}
+          {/* Кнопки */}
           {totalCards > 0 && (
-            <div className="text-center">
+            <div className="flex gap-3 justify-center flex-wrap">
               <Button variant="primary" onClick={handleCreate}>
                 ➕ Добавить карточку
               </Button>
+              <button
+                onClick={handleExport}
+                className="px-6 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                📥 Экспорт ({totalCards})
+              </button>
+              <label className="px-6 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+                📤 Импорт
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleImport}
+                  className="hidden"
+                />
+              </label>
             </div>
           )}
 
