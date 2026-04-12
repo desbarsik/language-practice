@@ -193,7 +193,7 @@ export const AiTutor: React.FC = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto flex flex-col" style={{ height: 'calc(100vh - 80px)' }}>
+    <div className="max-w-3xl mx-auto flex flex-col h-full">
       {/* Заголовок */}
       <div className="flex items-center justify-between shrink-0 pb-3">
         <div>
