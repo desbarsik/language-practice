@@ -377,7 +377,7 @@ export const AiTutor: React.FC = () => {
       )}
 
       {/* Сообщения */}
-      <div className="space-y-3 max-h-[60vh] overflow-y-auto pb-4">
+      <div className="space-y-3 overflow-y-auto pb-4" style={{ maxHeight: 'calc(100vh - 280px)' }}>
         {messages.length === 0 && (
           <div className="text-center py-12 text-gray-400 dark:text-gray-500">
             <div className="text-5xl mb-4">🤖</div>
@@ -436,19 +436,19 @@ export const AiTutor: React.FC = () => {
       </div>
 
       {/* Ввод */}
-      <div className="flex gap-2 items-end">
+      <div className="flex gap-2 items-end pb-safe-4">
         {/* Кнопка микрофона */}
         <button
           onClick={isListening ? stopListening : startListening}
-          className={`shrink-0 w-[76px] h-[76px] rounded-xl border-2 flex flex-col items-center justify-center text-2xl transition-all ${
+          className={`shrink-0 w-[56px] h-[56px] rounded-xl border-2 flex flex-col items-center justify-center text-xl transition-all ${
             isListening
               ? 'bg-red-100 dark:bg-red-900/30 border-red-400 text-red-600 dark:text-red-400 animate-pulse'
-              : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-blue-400 hover:text-blue-500'
+              : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400'
           }`}
           title={isListening ? 'Остановить запись' : 'Надиктовать текст'}
         >
           {isListening ? '⏹️' : '🎤'}
-          <span className="text-[9px] font-bold mt-0.5">
+          <span className="text-[8px] font-bold leading-none">
             {recognitionLang === 'en-US' ? 'EN' : 'RU'}
           </span>
         </button>
@@ -457,8 +457,8 @@ export const AiTutor: React.FC = () => {
         <button
           onClick={() => setRecognitionLang(prev => prev === 'en-US' ? 'ru-RU' : 'en-US')}
           disabled={isListening}
-          className="shrink-0 w-[44px] h-[76px] rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-bold text-gray-700 dark:text-gray-300 hover:border-blue-400 hover:text-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Переключить язык распознавания"
+          className="shrink-0 w-[36px] h-[56px] rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-bold text-gray-700 dark:text-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Переключить язык"
         >
           {recognitionLang === 'en-US' ? '🇬🇧' : '🇷🇺'}
         </button>
@@ -468,19 +468,23 @@ export const AiTutor: React.FC = () => {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Напиши что-нибудь или используй 🎤 для голоса..."
-          rows={2}
-          className="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+          placeholder="Напиши что-нибудь или используй 🎤..."
+          rows={1}
+          className="flex-1 px-3 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-base"
           disabled={isLoading}
+          style={{ minHeight: '56px', maxHeight: '120px' }}
         />
-        <Button
-          variant="primary"
+        <button
           onClick={handleSend}
           disabled={!input.trim() || isLoading}
-          className="self-end h-[76px] px-6"
+          className={`shrink-0 w-[56px] h-[56px] rounded-xl flex items-center justify-center text-xl font-bold transition-all ${
+            input.trim() && !isLoading
+              ? 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95'
+              : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+          }`}
         >
-          {isLoading ? '...' : '→'}
-        </Button>
+          {isLoading ? '⏳' : '→'}
+        </button>
       </div>
 
       {/* Навигация */}
