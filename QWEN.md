@@ -2,10 +2,10 @@
 
 ## Project Overview
 
-**English Master** is a web application for learning English through interactive flashcards and AI-powered conversation practice. It consists of a React frontend, a lightweight Express sync server for user-created cards, and an integrated AI tutor that uses OpenRouter API for real-time conversation practice.
+**English Master** is a web application for learning English through interactive flashcards and AI-powered conversation practice. It consists of a React frontend, a lightweight Express sync server for user-created cards, and an integrated AI tutor using OpenRouter API for real-time conversation practice.
 
 - **Repository:** https://github.com/desbarsik/language-practice
-- **Server deployment:** 192.168.199.222 (nginx serving static frontend + Express card sync server on port 3001)
+- **Server deployment:** 192.168.199.222 (nginx + HTTPS, serving static frontend; Express card sync server on port 3001)
 - **Question bank:** 100 questions across 3 levels and 4 topics
 - **AI Tutor:** Chat-based conversation practice with speech synthesis, powered by OpenRouter (GPT-4o-mini)
 
@@ -19,20 +19,20 @@
 │  - AI Tutor: OpenRouter API (client-side)                       │
 │  - Speech Synthesis: browser built-in API                       │
 └──────────────────────┬──────────────────────────────────────────┘
-                       │ HTTP (auto-sync)
+                       │ HTTP (auto-sync via nginx proxy)
                        ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  Card Sync Server (Express + JSON file, port 3001)              │
-│  - Stores user-created cards in cards.json                      │
-│  - CRUD: GET/POST/PUT/DELETE /api/cards                         │
-│  - Runs 24/7 via systemd service                                │
+│  Nginx (HTTPS, port 443) + Card Sync Server (port 3001)         │
+│  - Self-signed SSL cert for local network                       │
+│  - /api/* proxied to Express server on port 3001                │
+│  - Static files served from /var/www/english-master             │
 └──────────────────────┬──────────────────────────────────────────┘
                        │ HTTP (AI requests)
                        ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │  OpenRouter API (https://openrouter.ai/api/v1)                  │
-│  - AI Tutor: GPT-4o-mini or other models                        │
-│  - Client-side requests (API key in .env, embedded in build)    │
+│  - AI Tutor: GPT-4o-mini                                        │
+│  - Client-side requests (API key in .env)                       │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -63,20 +63,20 @@ language-practice/
 │   │   │   │   ├── AchievementNotification.tsx   # Badge popup (slides in, 5s)
 │   │   │   │   ├── Button.tsx                    # Reusable button
 │   │   │   │   ├── Card.tsx                      # Card wrapper
-│   │   │   │   ├── Layout.tsx                    # Header + nav + footer
+│   │   │   │   ├── Layout.tsx                    # Header + nav + footer (hidden on /ai-tutor)
 │   │   │   │   └── Tutorial.tsx                  # 5-step onboarding
 │   │   │   └── learning/
 │   │   │       ├── CardEditor.tsx                # Create/edit custom cards
 │   │   │       ├── CardList.tsx                  # List/filter/manage cards
 │   │   │       ├── FeedbackButtons.tsx           # Correct/incorrect buttons
 │   │   │       ├── Flashcard.tsx                 # Flip animation card
-│   │   │       ├── MultipleChoice.tsx            # 4-option question
+│   │   │       ├── MultipleChoice.tsx            # 4-option question (composite keys)
 │   │   │       └── SentenceBuilder.tsx           # Sentence from words (index-based)
 │   │   ├── data/
 │   │   │   └── mockQuestions.ts                  # 100 questions (3 levels × 4 topics)
 │   │   ├── pages/
-│   │   │   ├── AiTutor.tsx                       # AI conversation chat + speech
-│   │   │   ├── Home.tsx                          # Level/topic/mix selection + tutorial
+│   │   │   ├── AiTutor.tsx                       # AI conversation chat + speech synthesis
+│   │   │   ├── Home.tsx                          # Level/topic/mix selection + tutorial + AI promo
 │   │   │   ├── LearningSession.tsx               # Flashcard session (normal + custom)
 │   │   │   ├── MyCards.tsx                       # Custom card CRUD + practice + sync
 │   │   │   ├── ReviewErrors.tsx                  # Error review with flashcard repeat
@@ -105,6 +105,7 @@ language-practice/
 ├── scripts/
 │   └── validate-questions.js        # Pre-build validation for mockQuestions
 ├── deploy.ps1                       # PowerShell: build + scp to server
+├── nginx-ssl.conf                   # Nginx SSL config template
 ├── TODO.md                          # Task checklist
 ├── README.md                        # Quick-start
 └── QWEN.md                          # This file
@@ -119,7 +120,7 @@ language-practice/
 | My Cards | `/my-cards` | Create, edit, list, practice custom cards (auto-sync) |
 | Statistics | `/statistics` | Stats, achievements, custom cards stats, error list |
 | Review Errors | `/review-errors` | Error review with flashcard-style repeat |
-| AI Tutor | `/ai-tutor` | AI conversation practice with speech synthesis |
+| AI Tutor | `/ai-tutor` | AI conversation practice with speech synthesis (footer hidden) |
 
 ## Key Commands
 
@@ -138,16 +139,14 @@ npm run lint          # eslint .
 ```bash
 cd /var/www/english-master/server
 npm install
-npm start             # → http://192.168.199.222:3001
+npm start             # → http://127.0.0.1:3001
 ```
-
-Managed by systemd service `english-master-server` (auto-start, auto-restart).
 
 ### Deploy to Server
 
 ```powershell
 cd D:\qwen\language-practice
-.\deploy.ps1          # Builds frontend + uploads frontend dist + server to 192.168.199.222
+.\deploy.ps1          # Builds frontend + uploads to 192.168.199.222
 ```
 
 ### Git Update
@@ -170,18 +169,18 @@ Home → select level/topic/mix → startSession()
 ### Custom Cards (auto-sync)
 ```
 My Cards → create card → userCardsService.addCard()
-  → POST /api/cards (server:3001) → save to cards.json
+  → POST /api/cards → nginx proxy → Express server → cards.json
   → update localStorage cache
 
-Open from another device → userCardsService.getAll()
-  → GET /api/cards → load from server → cache in localStorage
+On another device → userCardsService.getAll()
+  → GET /api/cards (via nginx proxy) → load from server → cache in localStorage
   → Server unavailable → fallback to localStorage cache
 ```
 
 ### AI Tutor
 ```
 AI Tutor → type message → send to OpenRouter API
-  → system prompt (Spoken English Teacher) + conversation history
+  → system prompt (Spoken English Teacher, Russian-friendly) + conversation history
   → GPT-4o-mini responds (≤100 words, corrects errors, asks question)
   → user can click 🔊 to hear response spoken aloud (SpeechSynthesis API)
 ```
@@ -246,8 +245,9 @@ VITE_AI_MODEL=openai/gpt-4o-mini
 ```
 
 ### System Prompt
-Uses the "Spoken English Teacher and Improver" prompt from prompts.chat:
-- Responds in English, ≤100 words
+Russian-friendly prompt:
+- Answers in English, explains corrections in Russian
+- ≤100 words per response
 - Strictly corrects grammar, typos, factual errors
 - Always asks a question to keep conversation going
 
@@ -256,7 +256,8 @@ Uses the "Spoken English Teacher and Improver" prompt from prompts.chat:
 
 ### Speech Synthesis
 - Browser built-in `SpeechSynthesis` API (no external dependencies)
-- `en-US` language, 0.9 rate (slightly slower for learning)
+- Best available voice auto-selected (Google > Natural > Microsoft)
+- `en-US` language, 0.95 rate
 - 🔊 button on each AI response, ⏹️ to stop
 
 ## Custom Cards Sync
@@ -267,6 +268,14 @@ Uses the "Spoken English Teacher and Improver" prompt from prompts.chat:
 - **Offline fallback:** If server is unavailable, changes are cached locally and synced when reconnected
 - **Multi-device:** Open from any device → cards load from server automatically
 
+## HTTPS / SSL
+
+- Self-signed certificate at `/etc/nginx/ssl/em.crt` and `/etc/nginx/ssl/em.key`
+- Nginx config at `/etc/nginx/sites-available/english-master`
+- Port 80 → 301 redirect to HTTPS
+- Port 443 serves static files + proxies `/api/*` to Express on port 3001
+- Required for microphone access on mobile browsers
+
 ## Development Conventions
 
 - **TypeScript** strict mode, interfaces in `types/index.ts`
@@ -275,4 +284,8 @@ Uses the "Spoken English Teacher and Improver" prompt from prompts.chat:
 - **PascalCase** components, files match component names
 - **Async userCardsService** — all CRUD operations are async with server auto-sync
 - **No auth** — all pages are public, no JWT, no registration
-- **Pre-build validation** — `scripts/validate-questions.js` checks all 100 questions before every build
+- **Pre-build validation** — `scripts/validate-questions.js` checks all 100 questions before every build:
+  - All construction `correct_answer` words exist in `options`
+  - All multiple_choice `correct_answer` values exist in `options`
+  - Unique question IDs
+  - Minimum 4 options per question
