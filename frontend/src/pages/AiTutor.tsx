@@ -126,7 +126,8 @@ export const AiTutor: React.FC = () => {
   const startListening = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert('Ваш браузер не поддерживает распознавание речи. Попробуйте Chrome.');
+      // On mobile, suggest keyboard dictation
+      alert('На телефоне используйте 🎤 на клавиатуре — нажмите на микрофон когда появится клавиатура.');
       return;
     }
 
@@ -289,6 +290,9 @@ export const AiTutor: React.FC = () => {
     }, 100);
   };
 
+  // Check if speech recognition is supported
+  const isSpeechSupported = !!(window as any).SpeechRecognition || !!(window as any).webkitSpeechRecognition;
+
   return (
     <div className="max-w-3xl mx-auto space-y-4">
       {/* Заголовок */}
@@ -437,21 +441,23 @@ export const AiTutor: React.FC = () => {
 
       {/* Ввод */}
       <div className="flex gap-2 items-end pb-safe-4">
-        {/* Кнопка микрофона */}
-        <button
-          onClick={isListening ? stopListening : startListening}
-          className={`shrink-0 w-[56px] h-[56px] rounded-xl border-2 flex flex-col items-center justify-center text-xl transition-all ${
-            isListening
-              ? 'bg-red-100 dark:bg-red-900/30 border-red-400 text-red-600 dark:text-red-400 animate-pulse'
-              : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400'
-          }`}
-          title={isListening ? 'Остановить запись' : 'Надиктовать текст'}
-        >
-          {isListening ? '⏹️' : '🎤'}
-          <span className="text-[8px] font-bold leading-none">
-            {recognitionLang === 'en-US' ? 'EN' : 'RU'}
-          </span>
-        </button>
+        {/* Кнопка микрофона (только на десктопе) */}
+        {isSpeechSupported && (
+          <button
+            onClick={isListening ? stopListening : startListening}
+            className={`shrink-0 w-[56px] h-[56px] rounded-xl border-2 flex flex-col items-center justify-center text-xl transition-all ${
+              isListening
+                ? 'bg-red-100 dark:bg-red-900/30 border-red-400 text-red-600 dark:text-red-400 animate-pulse'
+                : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400'
+            }`}
+            title={isListening ? 'Остановить запись' : 'Надиктовать текст'}
+          >
+            {isListening ? '⏹️' : '🎤'}
+            <span className="text-[8px] font-bold leading-none">
+              {recognitionLang === 'en-US' ? 'EN' : 'RU'}
+            </span>
+          </button>
+        )}
 
         {/* Переключатель языка */}
         <button
@@ -468,8 +474,10 @@ export const AiTutor: React.FC = () => {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Напиши что-нибудь или используй 🎤..."
+          placeholder="Напиши или используй 🎤 на клавиатуре..."
           rows={1}
+          inputMode="text"
+          enterKeyHint="send"
           className="flex-1 px-3 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-base"
           disabled={isLoading}
           style={{ minHeight: '56px', maxHeight: '120px' }}
