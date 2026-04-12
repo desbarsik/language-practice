@@ -27,27 +27,99 @@ export const AiTutor: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Speech synthesis (built-in browser API)
   const speak = (text: string, messageId: string) => {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
+
     const utterance = new SpeechSynthesisUtterance(text);
-    // Detect language from text content
-    utterance.lang = recognitionLang === 'ru-RU' ? 'ru-RU' : 'en-US';
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
+
+    // Voices load asynchronously, get them
+    const voices = window.speechSynthesis.getVoices();
+    const isRussian = recognitionLang === 'ru-RU';
+    const targetLang = isRussian ? 'ru' : 'en';
+
+    // Priority: Google > Natural > Microsoft > any matching
+    const preferredVoice = voices.find(v =>
+      v.lang.startsWith(targetLang) && v.name.toLowerCase().includes('google')
+    ) || voices.find(v =>
+      v.lang.startsWith(targetLang) && v.name.toLowerCase().includes('natural')
+    ) || voices.find(v =>
+      v.lang.startsWith(targetLang) && v.name.toLowerCase().includes('microsoft')
+    ) || voices.find(v =>
+      v.lang.startsWith(targetLang)
+    );
+
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+
+    utterance.lang = isRussian ? 'ru-RU' : 'en-US';
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
     utterance.onend = () => setSpeakingId(null);
     utterance.onerror = () => setSpeakingId(null);
     setSpeakingId(messageId);
-    window.speechSynthesis.speak(utterance);
+
+    // Ensure voices are loaded
+    if (voices.length === 0) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        const loadedVoices = window.speechSynthesis.getVoices();
+        const loadedVoice = loadedVoices.find(v =>
+          v.lang.startsWith(targetLang) && v.name.toLowerCase().includes('google')
+        ) || loadedVoices.find(v =>
+          v.lang.startsWith(targetLang) && v.name.toLowerCase().includes('natural')
+        ) || loadedVoices.find(v =>
+          v.lang.startsWith(targetLang)
+        );
+        if (loadedVoice) utterance.voice = loadedVoice;
+        window.speechSynthesis.speak(utterance);
+      };
+    } else {
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  // Google Translate TTS (fallback — no API key needed)
+  const speakGoogle = (text: string, messageId: string) => {
+    window.speechSynthesis.cancel();
+    setSpeakingId(messageId);
+
+    // Truncate to ~200 chars (Google Translate limit)
+    const trimmed = text.length > 200 ? text.slice(0, 200) : text;
+    const lang = recognitionLang === 'ru-RU' ? 'ru' : 'en';
+    const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(trimmed)}&tl=${lang}&client=tw-ob`;
+
+    const audio = new Audio(url);
+    currentAudioRef.current = audio;
+    audio.onended = () => {
+      setSpeakingId(null);
+      currentAudioRef.current = null;
+    };
+    audio.onerror = () => {
+      // Fallback to browser SpeechSynthesis
+      setSpeakingId(null);
+      currentAudioRef.current = null;
+      speak(text, messageId);
+    };
+    audio.play().catch(() => {
+      setSpeakingId(null);
+      currentAudioRef.current = null;
+    });
   };
 
   const stopSpeaking = () => {
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current = null;
+    }
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
-      setSpeakingId(null);
     }
+    setSpeakingId(null);
   };
 
   // Speech recognition (built-in browser API)
@@ -332,7 +404,7 @@ export const AiTutor: React.FC = () => {
                 <p className="text-sm whitespace-pre-wrap flex-1">{msg.content}</p>
                 {msg.role === 'assistant' && !msg.id.startsWith('error') && (
                   <button
-                    onClick={() => speakingId === msg.id ? stopSpeaking() : speak(msg.content, msg.id)}
+                    onClick={() => speakingId === msg.id ? stopSpeaking() : speakGoogle(msg.content, msg.id)}
                     className={`shrink-0 text-lg transition-all ${
                       speakingId === msg.id
                         ? 'text-blue-500 animate-pulse'

@@ -17,7 +17,8 @@
       "Bash(sudo *)",
       "Bash(.\\deploy.ps1)",
       "Bash(ssh *)",
-      "Bash(scp *)"
+      "Bash(scp *)",
+      "WebFetch(www.voicerss.org)"
     ]
   },
   "mcpServers": {
