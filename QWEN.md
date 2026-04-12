@@ -2,10 +2,10 @@
 
 ## Project Overview
 
-**English Master** is a web application for learning English through interactive flashcards and AI-powered conversation practice. It consists of a React frontend, a lightweight Express sync server for user-created cards, and an integrated AI tutor using OpenRouter API for real-time conversation practice.
+**English Master** is a web application for learning English through interactive flashcards and AI-powered conversation practice. It consists of a React frontend and a lightweight Express sync server for user-created cards.
 
 - **Repository:** https://github.com/desbarsik/language-practice
-- **Server deployment:** 192.168.199.222 (nginx + HTTPS, serving static frontend; Express card sync server on port 3001)
+- **Server deployment:** 192.168.199.222 (nginx + HTTPS on port 443, card sync server on port 3001)
 - **Question bank:** 100 questions across 3 levels and 4 topics
 - **AI Tutor:** Chat-based conversation practice with speech synthesis, powered by OpenRouter (GPT-4o-mini)
 

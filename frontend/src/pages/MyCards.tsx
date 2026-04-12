@@ -119,31 +119,31 @@ export const MyCards: React.FC = () => {
         </p>
       </div>
 
-      {/* Как это работает */}
-      <Card className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/10 dark:to-orange-900/10 border-amber-200 dark:border-amber-800">
-        <div className="flex items-start gap-4">
-          <span className="text-4xl shrink-0">💡</span>
-          <div>
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-              Как это работает
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-600 dark:text-gray-400">
-              <div className="flex items-start gap-2">
-                <span className="text-lg">1️⃣</span>
-                <p>Создайте карточку с английским словом и переводом</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-lg">2️⃣</span>
-                <p>Начните тренировку — карточки будут показываться в случайном порядке</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-lg">3️⃣</span>
-                <p>Переворачивайте карточку, проверяйте себя и запоминайте</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Card>
+      {/* Кнопки действий */}
+      <div className="flex gap-3 justify-center flex-wrap">
+        <button
+          onClick={handleCreate}
+          className="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm"
+        >
+          ➕ Добавить карточку
+        </button>
+        <button
+          onClick={handleExport}
+          disabled={totalCards === 0}
+          className="px-6 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          📥 Экспорт
+        </button>
+        <label className="px-6 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+          📤 Импорт
+          <input
+            type="file"
+            accept=".json"
+            onChange={handleImport}
+            className="hidden"
+          />
+        </label>
+      </div>
 
       {/* Статистика */}
       {totalCards > 0 && (
@@ -194,31 +194,7 @@ export const MyCards: React.FC = () => {
             />
           </Card>
 
-          {/* Кнопки */}
-          {totalCards > 0 && (
-            <div className="flex gap-3 justify-center flex-wrap">
-              <Button variant="primary" onClick={handleCreate}>
-                ➕ Добавить карточку
-              </Button>
-              <button
-                onClick={handleExport}
-                className="px-6 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
-                📥 Экспорт
-              </button>
-              <label className="px-6 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer">
-                📤 Импорт
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={handleImport}
-                  className="hidden"
-                />
-              </label>
-            </div>
-          )}
-
-          {/* Если карточек нет — кнопка создания */}
+          {/* Если карточек нет */}
           {totalCards === 0 && (
             <div className="text-center">
               <Button variant="primary" size="lg" onClick={handleCreate}>
