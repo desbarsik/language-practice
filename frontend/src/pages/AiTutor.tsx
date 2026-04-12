@@ -22,11 +22,8 @@ export const AiTutor: React.FC = () => {
   const [topic, setTopic] = useState<string>('free');
   const [showSettings, setShowSettings] = useState(false);
   const [speakingId, setSpeakingId] = useState<string | null>(null);
-  const [isListening, setIsListening] = useState(false);
-  const [recognitionLang, setRecognitionLang] = useState<string>('en-US');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const recognitionRef = useRef<any>(null);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Speech synthesis (built-in browser API)
@@ -35,80 +32,18 @@ export const AiTutor: React.FC = () => {
     window.speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
-
-    // Voices load asynchronously, get them
     const voices = window.speechSynthesis.getVoices();
-    const isRussian = recognitionLang === 'ru-RU';
-    const targetLang = isRussian ? 'ru' : 'en';
+    const enVoice = voices.find(v => v.lang.startsWith('en'));
+    if (enVoice) utterance.voice = enVoice;
 
-    // Priority: Google > Natural > Microsoft > any matching
-    const preferredVoice = voices.find(v =>
-      v.lang.startsWith(targetLang) && v.name.toLowerCase().includes('google')
-    ) || voices.find(v =>
-      v.lang.startsWith(targetLang) && v.name.toLowerCase().includes('natural')
-    ) || voices.find(v =>
-      v.lang.startsWith(targetLang) && v.name.toLowerCase().includes('microsoft')
-    ) || voices.find(v =>
-      v.lang.startsWith(targetLang)
-    );
-
-    if (preferredVoice) {
-      utterance.voice = preferredVoice;
-    }
-
-    utterance.lang = isRussian ? 'ru-RU' : 'en-US';
+    utterance.lang = 'en-US';
     utterance.rate = 0.95;
     utterance.pitch = 1.0;
     utterance.volume = 1.0;
     utterance.onend = () => setSpeakingId(null);
     utterance.onerror = () => setSpeakingId(null);
     setSpeakingId(messageId);
-
-    // Ensure voices are loaded
-    if (voices.length === 0) {
-      window.speechSynthesis.onvoiceschanged = () => {
-        const loadedVoices = window.speechSynthesis.getVoices();
-        const loadedVoice = loadedVoices.find(v =>
-          v.lang.startsWith(targetLang) && v.name.toLowerCase().includes('google')
-        ) || loadedVoices.find(v =>
-          v.lang.startsWith(targetLang) && v.name.toLowerCase().includes('natural')
-        ) || loadedVoices.find(v =>
-          v.lang.startsWith(targetLang)
-        );
-        if (loadedVoice) utterance.voice = loadedVoice;
-        window.speechSynthesis.speak(utterance);
-      };
-    } else {
-      window.speechSynthesis.speak(utterance);
-    }
-  };
-
-  // Google Translate TTS (fallback — no API key needed)
-  const speakGoogle = (text: string, messageId: string) => {
-    window.speechSynthesis.cancel();
-    setSpeakingId(messageId);
-
-    // Truncate to ~200 chars (Google Translate limit)
-    const trimmed = text.length > 200 ? text.slice(0, 200) : text;
-    const lang = recognitionLang === 'ru-RU' ? 'ru' : 'en';
-    const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(trimmed)}&tl=${lang}&client=tw-ob`;
-
-    const audio = new Audio(url);
-    currentAudioRef.current = audio;
-    audio.onended = () => {
-      setSpeakingId(null);
-      currentAudioRef.current = null;
-    };
-    audio.onerror = () => {
-      // Fallback to browser SpeechSynthesis
-      setSpeakingId(null);
-      currentAudioRef.current = null;
-      speak(text, messageId);
-    };
-    audio.play().catch(() => {
-      setSpeakingId(null);
-      currentAudioRef.current = null;
-    });
+    window.speechSynthesis.speak(utterance);
   };
 
   const stopSpeaking = () => {
@@ -120,39 +55,6 @@ export const AiTutor: React.FC = () => {
       window.speechSynthesis.cancel();
     }
     setSpeakingId(null);
-  };
-
-  // Speech recognition (built-in browser API)
-  const startListening = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      // On mobile, suggest keyboard dictation
-      alert('На телефоне используйте 🎤 на клавиатуре — нажмите на микрофон когда появится клавиатура.');
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = recognitionLang;
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onstart = () => setIsListening(true);
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setInput(prev => (prev ? prev + ' ' : '') + transcript);
-    };
-    recognition.onerror = () => setIsListening(false);
-    recognition.onend = () => setIsListening(false);
-
-    recognitionRef.current = recognition;
-    recognition.start();
-  };
-
-  const stopListening = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    }
   };
 
   const scrollToBottom = () => {
@@ -290,19 +192,16 @@ export const AiTutor: React.FC = () => {
     }, 100);
   };
 
-  // Check if speech recognition is supported
-  const isSpeechSupported = !!(window as any).SpeechRecognition || !!(window as any).webkitSpeechRecognition;
-
   return (
-    <div className="max-w-3xl mx-auto space-y-4">
+    <div className="max-w-3xl mx-auto flex flex-col" style={{ height: 'calc(100vh - 80px)' }}>
       {/* Заголовок */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between shrink-0 pb-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
             🤖 AI Тьютор
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Практикуйте разговорный английский с AI
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Практикуй английский с AI
           </p>
         </div>
         <div className="flex gap-2">
@@ -315,7 +214,7 @@ export const AiTutor: React.FC = () => {
           </button>
           {messages.length > 0 && (
             <Button variant="secondary" size="sm" onClick={handleNewChat}>
-              🔄 Новый чат
+              🔄
             </Button>
           )}
         </div>
@@ -323,7 +222,7 @@ export const AiTutor: React.FC = () => {
 
       {/* Настройки */}
       {showSettings && (
-        <Card className="bg-gray-50 dark:bg-gray-800">
+        <Card className="bg-gray-50 dark:bg-gray-800 shrink-0 mb-3">
           <h3 className="font-semibold text-gray-900 dark:text-white mb-3">⚙️ Настройки API</h3>
           <div className="space-y-3 text-sm">
             <p className="text-gray-500 dark:text-gray-400">
@@ -356,24 +255,24 @@ export const AiTutor: React.FC = () => {
 
       {/* Выбор темы */}
       {messages.length === 0 && (
-        <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/10 dark:to-purple-900/10 border-indigo-200 dark:border-indigo-800">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-3">💬 Выберите тему разговора</h3>
+        <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/10 dark:to-purple-900/10 border-indigo-200 dark:border-indigo-800 shrink-0">
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-3">💬 Выбери тему</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {[
-              { id: 'free', icon: '🗣️', label: 'Свободная тема' },
-              { id: 'restaurant', icon: '🍽️', label: 'В ресторане' },
-              { id: 'airport', icon: '✈️', label: 'В аэропорту' },
+              { id: 'free', icon: '🗣️', label: 'Свободная' },
+              { id: 'restaurant', icon: '🍽️', label: 'Ресторан' },
+              { id: 'airport', icon: '✈️', label: 'Аэропорт' },
               { id: 'shopping', icon: '🛍️', label: 'Покупки' },
-              { id: 'doctor', icon: '🏥', label: 'У врача' },
+              { id: 'doctor', icon: '🏥', label: 'Врач' },
               { id: 'interview', icon: '💼', label: 'Собеседование' },
             ].map(t => (
               <button
                 key={t.id}
                 onClick={() => handleStartWithTopic(t.id)}
-                className="p-3 rounded-lg bg-white dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600 transition-colors text-left"
+                className="p-3 rounded-lg bg-white dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600 transition-colors text-center"
               >
-                <span className="text-xl">{t.icon}</span>
-                <p className="text-sm font-medium text-gray-900 dark:text-white mt-1">{t.label}</p>
+                <span className="text-2xl block mb-1">{t.icon}</span>
+                <span className="text-xs font-medium text-gray-900 dark:text-white">{t.label}</span>
               </button>
             ))}
           </div>
@@ -381,7 +280,7 @@ export const AiTutor: React.FC = () => {
       )}
 
       {/* Сообщения */}
-      <div className="space-y-3 overflow-y-auto pb-4" style={{ maxHeight: 'calc(100vh - 280px)' }}>
+      <div className="flex-1 overflow-y-auto space-y-3 py-3">
         {messages.length === 0 && (
           <div className="text-center py-12 text-gray-400 dark:text-gray-500">
             <div className="text-5xl mb-4">🤖</div>
@@ -408,7 +307,7 @@ export const AiTutor: React.FC = () => {
                 <p className="text-sm whitespace-pre-wrap flex-1">{msg.content}</p>
                 {msg.role === 'assistant' && !msg.id.startsWith('error') && (
                   <button
-                    onClick={() => speakingId === msg.id ? stopSpeaking() : speakGoogle(msg.content, msg.id)}
+                    onClick={() => speakingId === msg.id ? stopSpeaking() : speak(msg.content, msg.id)}
                     className={`shrink-0 text-lg transition-all ${
                       speakingId === msg.id
                         ? 'text-blue-500 animate-pulse'
@@ -440,59 +339,30 @@ export const AiTutor: React.FC = () => {
       </div>
 
       {/* Ввод */}
-      <div className="flex gap-2 items-end pb-safe-4">
-        {/* Кнопка микрофона (только на десктопе) */}
-        {isSpeechSupported && (
+      <div className="shrink-0 pt-2 border-t border-gray-200 dark:border-gray-700 pb-2">
+        <div className="flex gap-2 items-end">
+          <textarea
+            ref={inputRef}
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Напиши сообщение..."
+            rows={1}
+            className="flex-1 px-3 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-base"
+            style={{ minHeight: '48px', maxHeight: '100px' }}
+          />
           <button
-            onClick={isListening ? stopListening : startListening}
-            className={`shrink-0 w-[56px] h-[56px] rounded-xl border-2 flex flex-col items-center justify-center text-xl transition-all ${
-              isListening
-                ? 'bg-red-100 dark:bg-red-900/30 border-red-400 text-red-600 dark:text-red-400 animate-pulse'
-                : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400'
+            onClick={handleSend}
+            disabled={!input.trim() || isLoading}
+            className={`shrink-0 w-[48px] h-[48px] rounded-xl flex items-center justify-center text-lg font-bold transition-all ${
+              input.trim() && !isLoading
+                ? 'bg-blue-600 text-white active:scale-95'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
             }`}
-            title={isListening ? 'Остановить запись' : 'Надиктовать текст'}
           >
-            {isListening ? '⏹️' : '🎤'}
-            <span className="text-[8px] font-bold leading-none">
-              {recognitionLang === 'en-US' ? 'EN' : 'RU'}
-            </span>
+            {isLoading ? '⏳' : '→'}
           </button>
-        )}
-
-        {/* Переключатель языка */}
-        <button
-          onClick={() => setRecognitionLang(prev => prev === 'en-US' ? 'ru-RU' : 'en-US')}
-          disabled={isListening}
-          className="shrink-0 w-[36px] h-[56px] rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-bold text-gray-700 dark:text-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Переключить язык"
-        >
-          {recognitionLang === 'en-US' ? '🇬🇧' : '🇷🇺'}
-        </button>
-
-        <textarea
-          ref={inputRef}
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Напиши или используй 🎤 на клавиатуре..."
-          rows={1}
-          inputMode="text"
-          enterKeyHint="send"
-          className="flex-1 px-3 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-base"
-          disabled={isLoading}
-          style={{ minHeight: '56px', maxHeight: '120px' }}
-        />
-        <button
-          onClick={handleSend}
-          disabled={!input.trim() || isLoading}
-          className={`shrink-0 w-[56px] h-[56px] rounded-xl flex items-center justify-center text-xl font-bold transition-all ${
-            input.trim() && !isLoading
-              ? 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95'
-              : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
-          }`}
-        >
-          {isLoading ? '⏳' : '→'}
-        </button>
+        </div>
       </div>
 
       {/* Навигация */}
