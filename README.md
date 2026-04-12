@@ -14,96 +14,61 @@ npm run dev
 
 Приложение будет доступно по адресу: http://localhost:5173
 
-### Backend (локально)
+### Card Sync Server (локально)
 
 ```bash
-cd backend
+cd server
 npm install
-cp .env.example .env  # отредактируйте DATABASE_URL и JWT_SECRET
-npm run dev
+npm start
 ```
 
-API будет доступно по адресу: http://localhost:3000
-
-### Заполнение базы данных
-
-```bash
-cd backend
-npm run seed
-```
-
-### Одновременный запуск
-
-```bash
-npm install  # в корне проекта
-npm run dev
-```
+Сервер синхронизации карточек запустится на порту 3001.
 
 ## 📁 Структура проекта
 
 ```
 language-practice/
-├── frontend/          # React приложение
+├── frontend/          # React приложение (Vite + TypeScript)
 │   ├── src/
 │   │   ├── components/  # UI компоненты
 │   │   │   ├── common/  # Базовые компоненты (Button, Card, Layout)
-│   │   │   ├── learning/# Компоненты обучения (Flashcard, MultipleChoice...)
-│   │   │   ├── stats/   # Компоненты статистики
-│   │   │   └── auth/    # Компоненты аутентификации
+│   │   │   └── learning/# Компоненты обучения (Flashcard, MultipleChoice...)
 │   │   ├── pages/       # Страницы приложения
-│   │   ├── data/        # Моковые данные
-│   │   ├── services/    # API и localStorage сервисы
+│   │   ├── data/        # 53 встроенных вопроса
+│   │   ├── services/    # localStorage и синхронизация карточек
 │   │   ├── store/       # Zustand store
 │   │   └── types/       # TypeScript типы
 │   └── ...
-├── backend/           # Node.js/Express сервер
-│   ├── src/
-│   │   ├── config/      # Конфигурация БД
-│   │   ├── middleware/  # Auth, обработка ошибок
-│   │   ├── models/      # Модели данных и запросы
-│   │   ├── routes/      # API endpoints
-│   │   └── scripts/     # Seed скрипты
-│   └── ...
-├── specification.md   # Спецификация проекта
-├── TODO.md           # Список задач
-├── DEPLOYMENT.md     # Руководство по деплою
-└── README.md         # Этот файл
+├── server/            # Express sync server (порт 3001)
+│   ├── server.js      # CRUD для пользовательских карточек
+│   └── cards.json     # Хранилище карточек (авто-создаётся)
+├── deploy.ps1         # Скрипт деплоя на сервер
+├── TODO.md            # Список задач
+└── QWEN.md            # Документация проекта
 ```
 
 ## 🛠 Технологический стек
 
 - **Frontend:** React 18, TypeScript, Tailwind CSS, React Router, Framer Motion, Zustand
-- **Backend:** Node.js, Express, TypeScript, PostgreSQL
-- **Build:** Vite (frontend), TypeScript (backend)
-- **Storage:** localStorage + PostgreSQL (для авторизованных пользователей)
-- **Auth:** JWT токены, bcrypt
+- **Build:** Vite
+- **Sync Server:** Node.js, Express
+- **Storage:** localStorage + JSON файл на сервере
 
 ## 📋 Функциональность
 
-### ✅ Реализовано (Этапы 1-12)
-
-- **Аутентификация:** Регистрация, вход/выход, JWT токены
-- **Защищенные маршруты:** Доступ только для авторизованных пользователей
-- **Навигация:** Роутинг между страницами (Home, Learning, Statistics)
-- **Выбор уровня:** Beginner (A1-A2), Intermediate (B1-B2), Advanced (C1-C2)
-- **Выбор тем:** Путешествия, Еда, Бизнес, Грамматика
-- **Карточки с переворотом:** Анимация flip с помощью Framer Motion
+- **3 уровня:** Beginner (A1-A2), Intermediate (B1-B2), Advanced (C1-C2)
+- **4 темы:** Путешествия, Еда, Бизнес, Грамматика
 - **Типы вопросов:**
   - Multiple Choice (выбор из 4 вариантов)
   - Sentence Builder (составление предложения из слов)
+- **Карточки с переворотом** — анимация flip через Framer Motion
 - **Обратная связь:** Кнопки "Правильно"/"Ошибка" после ответа
 - **Статистика:** Подсчет правильных/неправильных ответов, процент успеха
-- **Трекинг ошибок:** Сохранение вопросов с ошибками
-- **Синхронизация:** Прогресс сохраняется в БД и синхронизируется между устройствами
-- **Адаптивный дизайн:** Корректное отображение на мобильных устройствах
-- **Анимации:** Плавные переходы и визуальная обратная связь
-
-### 🚀 Деплой
-
-См. [DEPLOYMENT.md](./DEPLOYMENT.md) для инструкций по развертыванию:
-- Frontend: Vercel
-- Backend: Render
-- Database: PostgreSQL (облачный)
+- **Трекинг ошибок:** Сохранение вопросов с ошибками для повторения
+- **Пользовательские карточки:** Создание, редактирование, удаление с авто-синхронизацией
+- **10 достижений:** Бейджи за прогресс и серии
+- **Адаптивный дизайн:** Мобильные устройства
+- **Тёмная тема:** Автоопределение по системным настройкам
 
 ## 📄 Лицензия
 

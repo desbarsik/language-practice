@@ -80,8 +80,9 @@ export const useAppStore = create<AppState>((set, get) => {
         showResults: false,
         isLoading: false,
       });
-    } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error occurred';
+      set({ error: message, isLoading: false });
     }
   },
 

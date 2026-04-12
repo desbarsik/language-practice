@@ -481,7 +481,7 @@ export const mockQuestions: Question[] = [
     type: 'construction',
     question_text: 'Составьте предложение: "Если бы я знал, я бы пришёл"',
     correct_answer: 'If I had known I would have come',
-    options: ['If', 'I', 'had', 'known', 'would', 'have', 'come', 'will', 'did'],
+    options: ['If', 'I', 'I', 'had', 'known', 'would', 'have', 'come', 'will', 'did'],
     level: 'Advanced',
   },
   {

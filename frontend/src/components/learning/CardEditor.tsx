@@ -46,14 +46,14 @@ export const CardEditor: React.FC<CardEditorProps> = ({ card, onSave, onCancel }
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
     if (isEditing && card) {
-      userCardsService.updateCard(card.id, { type, front_text: frontText.trim(), back_text: backText.trim(), hint: hint.trim() || undefined });
+      await userCardsService.updateCard(card.id, { type, front_text: frontText.trim(), back_text: backText.trim(), hint: hint.trim() || undefined });
     } else {
-      userCardsService.addCard({ type, front_text: frontText.trim(), back_text: backText.trim(), hint: hint.trim() || undefined });
+      await userCardsService.addCard({ type, front_text: frontText.trim(), back_text: backText.trim(), hint: hint.trim() || undefined });
     }
 
     onSave();

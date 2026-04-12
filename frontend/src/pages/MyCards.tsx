@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { CustomCard } from '../types';
 import { userCardsService } from '../services/userCardsService';
@@ -11,26 +11,34 @@ type ViewMode = 'list' | 'create' | 'edit';
 
 export const MyCards: React.FC = () => {
   const navigate = useNavigate();
-  const [cards, setCards] = useState(userCardsService.getAll());
+  const [cards, setCards] = useState<CustomCard[]>([]);
+  const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [editingCard, setEditingCard] = useState<CustomCard | null>(null);
 
-  const refreshCards = useCallback(() => {
-    setCards(userCardsService.getAll());
+  const refreshCards = useCallback(async () => {
+    setLoading(true);
+    const loaded = await userCardsService.getAll();
+    setCards(loaded);
+    setLoading(false);
   }, []);
 
-  const handleCreate = () => {
+  useEffect(() => {
+    refreshCards();
+  }, [refreshCards]);
+
+  const handleCreate = async () => {
     setEditingCard(null);
     setViewMode('create');
   };
 
-  const handleEdit = (card: CustomCard) => {
+  const handleEdit = async (card: CustomCard) => {
     setEditingCard(card);
     setViewMode('edit');
   };
 
-  const handleSave = () => {
-    refreshCards();
+  const handleSave = async () => {
+    await refreshCards();
     setEditingCard(null);
     setViewMode('list');
   };
@@ -64,32 +72,40 @@ export const MyCards: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       try {
         const imported: CustomCard[] = JSON.parse(ev.target?.result as string);
         if (Array.isArray(imported)) {
-          imported.forEach((card) => {
-            userCardsService.addCard({
+          for (const card of imported) {
+            await userCardsService.addCard({
               type: card.type,
               front_text: card.front_text,
               back_text: card.back_text,
               hint: card.hint,
             });
-          });
-          refreshCards();
+          }
+          await refreshCards();
         }
       } catch {
         alert('Ошибка: неверный формат файла');
       }
     };
     reader.readAsText(file);
-    // Reset input so same file can be re-imported
     e.target.value = '';
   };
 
   const totalCards = cards.length;
   const translationCount = cards.filter(c => c.type === 'translation').length;
   const sentenceCount = cards.filter(c => c.type === 'sentence').length;
+
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto text-center py-16">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="mt-4 text-gray-500 dark:text-gray-400">Загрузка карточек...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -188,7 +204,7 @@ export const MyCards: React.FC = () => {
                 onClick={handleExport}
                 className="px-6 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
-                📥 Экспорт ({totalCards})
+                📥 Экспорт
               </button>
               <label className="px-6 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer">
                 📤 Импорт

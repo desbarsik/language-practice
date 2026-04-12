@@ -39,21 +39,20 @@ export const CardList: React.FC<CardListProps> = ({ cards, onEdit, onRefresh, on
     return matchesType && matchesSearch;
   });
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (deleteConfirm === id) {
-      userCardsService.deleteCard(id);
+      await userCardsService.deleteCard(id);
       setDeleteConfirm(null);
       onRefresh();
     } else {
       setDeleteConfirm(id);
-      // Auto-reset after 3 seconds
       setTimeout(() => setDeleteConfirm(null), 3000);
     }
   };
 
-  const handleClearAll = () => {
+  const handleClearAll = async () => {
     if (deleteConfirm === 'all') {
-      userCardsService.clearAll();
+      await userCardsService.clearAll();
       setDeleteConfirm(null);
       onRefresh();
     } else {
