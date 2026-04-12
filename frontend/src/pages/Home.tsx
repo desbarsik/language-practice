@@ -33,6 +33,12 @@ export const Home: React.FC = () => {
     }
   };
 
+  const handleStartMixed = async () => {
+    const { startMixedSession } = useAppStore.getState();
+    await startMixedSession();
+    navigate('/learning');
+  };
+
   const handleStartTopic = async (topicId: string) => {
     // Определяем уровень по теме
     const topic = topics.find((t) => t.id === topicId);
@@ -128,6 +134,26 @@ export const Home: React.FC = () => {
         </div>
       </Card>
 
+      {/* AI Тьютор — промо */}
+      <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/10 dark:to-purple-900/10 border-2 border-indigo-200 dark:border-indigo-800">
+        <div className="flex items-center gap-4">
+          <div className="text-5xl">🤖</div>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+              AI Тьютор — разговорная практика
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+              Практикуйте английский в диалоге с AI. Исправление ошибок, разные темы, живое общение.
+            </p>
+            <Link to="/ai-tutor">
+              <Button variant="primary" size="sm">
+                💬 Начать разговор
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </Card>
+
       {/* Выбор уровня */}
       <section>
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
@@ -157,6 +183,18 @@ export const Home: React.FC = () => {
               </div>
             </Card>
           ))}
+        </div>
+
+        {/* Кнопка Микс — все 100 вопросов вперемешку */}
+        <div className="flex justify-center mt-6">
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={handleStartMixed}
+            className="bg-gradient-to-r from-indigo-500 to-purple-600 border-0 text-lg px-8"
+          >
+            🎲 Микс — все 100 вопросов вперемешку
+          </Button>
         </div>
       </section>
 

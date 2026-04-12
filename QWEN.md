@@ -2,44 +2,39 @@
 
 ## Project Overview
 
-**English Master** is a web application for learning English through interactive flashcards. It consists of a React frontend and a lightweight Express sync server for user-created cards. All quiz data (53 questions) is embedded in the frontend; user-created cards are stored on the sync server (JSON file) with localStorage cache fallback.
+**English Master** is a web application for learning English through interactive flashcards and AI-powered conversation practice. It consists of a React frontend, a lightweight Express sync server for user-created cards, and an integrated AI tutor that uses OpenRouter API for real-time conversation practice.
 
 - **Repository:** https://github.com/desbarsik/language-practice
-- **Server deployment:** 192.168.199.222:3001 (card sync server)
-- **Question bank:** 53 questions across 3 levels and 4 topics
-- **Key features:** 10 achievement badges, custom user-created flashcards with auto-sync, error review system, progress tracking with per-level stats, tutorial for newcomers
+- **Server deployment:** 192.168.199.222 (nginx serving static frontend + Express card sync server on port 3001)
+- **Question bank:** 100 questions across 3 levels and 4 topics
+- **AI Tutor:** Chat-based conversation practice with speech synthesis, powered by OpenRouter (GPT-4o-mini)
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  Frontend (React + TypeScript + Vite)                       │
-│  - 53 mock questions (embedded)                             │
-│  - localStorage: stats, errors, achievements, card cache    │
-│  - Auto-syncs custom cards with Card Sync Server            │
-└──────────────────────┬──────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  Frontend (React + TypeScript + Vite)                           │
+│  - 100 mock questions (embedded)                                │
+│  - localStorage: stats, errors, achievements, card cache        │
+│  - AI Tutor: OpenRouter API (client-side)                       │
+│  - Speech Synthesis: browser built-in API                       │
+└──────────────────────┬──────────────────────────────────────────┘
                        │ HTTP (auto-sync)
                        ▼
-┌─────────────────────────────────────────────────────────────┐
-│  Card Sync Server (Express + JSON file, port 3001)          │
-│  - Stores user-created cards in cards.json                  │
-│  - CRUD: GET/POST/PUT/DELETE /api/cards                     │
-│  - Runs 24/7 on server                                      │
-└──────────────────────┬──────────────────────────────────────┘
-                       │ Manual commit
+┌─────────────────────────────────────────────────────────────────┐
+│  Card Sync Server (Express + JSON file, port 3001)              │
+│  - Stores user-created cards in cards.json                      │
+│  - CRUD: GET/POST/PUT/DELETE /api/cards                         │
+│  - Runs 24/7 via systemd service                                │
+└──────────────────────┬──────────────────────────────────────────┘
+                       │ HTTP (AI requests)
                        ▼
-┌─────────────────────────────────────────────────────────────┐
-│  GitHub (https://github.com/desbarsik/language-practice)    │
-│  - Source code                                              │
-│  - Updated manually via git push                            │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  OpenRouter API (https://openrouter.ai/api/v1)                  │
+│  - AI Tutor: GPT-4o-mini or other models                        │
+│  - Client-side requests (API key in .env, embedded in build)    │
+└─────────────────────────────────────────────────────────────────┘
 ```
-
-### What was removed (legacy):
-
-- `backend/` — Full backend with PostgreSQL, JWT auth (no longer used)
-- Authentication, registration, login — removed
-- Protected routes — all pages are public
 
 ## Tech Stack
 
@@ -53,6 +48,8 @@
 | Animations | Framer Motion 11 |
 | Sync Server | Express.js (Node.js) |
 | Sync Storage | JSON file (cards.json) |
+| AI Tutor | OpenRouter API (GPT-4o-mini) |
+| Speech | Web Speech Synthesis API (browser built-in) |
 | Local Storage | Stats, errors, achievements, card cache |
 
 ## Project Structure
@@ -63,9 +60,7 @@ language-practice/
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── common/
-│   │   │   │   ├── AchievementNotification.tsx   # Badge popup (slides in, 3s)
-│   │   │   │   ├── AnimatedCard.tsx              # Framer Motion wrapper
-│   │   │   │   ├── AnimatedFeedback.tsx          # Success/error animation
+│   │   │   │   ├── AchievementNotification.tsx   # Badge popup (slides in, 5s)
 │   │   │   │   ├── Button.tsx                    # Reusable button
 │   │   │   │   ├── Card.tsx                      # Card wrapper
 │   │   │   │   ├── Layout.tsx                    # Header + nav + footer
@@ -78,9 +73,10 @@ language-practice/
 │   │   │       ├── MultipleChoice.tsx            # 4-option question
 │   │   │       └── SentenceBuilder.tsx           # Sentence from words (index-based)
 │   │   ├── data/
-│   │   │   └── mockQuestions.ts                  # 53 questions (3 levels × 4 topics)
+│   │   │   └── mockQuestions.ts                  # 100 questions (3 levels × 4 topics)
 │   │   ├── pages/
-│   │   │   ├── Home.tsx                          # Level/topic selection + tutorial
+│   │   │   ├── AiTutor.tsx                       # AI conversation chat + speech
+│   │   │   ├── Home.tsx                          # Level/topic/mix selection + tutorial
 │   │   │   ├── LearningSession.tsx               # Flashcard session (normal + custom)
 │   │   │   ├── MyCards.tsx                       # Custom card CRUD + practice + sync
 │   │   │   ├── ReviewErrors.tsx                  # Error review with flashcard repeat
@@ -96,6 +92,8 @@ language-practice/
 │   │   ├── App.tsx                        # Router (no auth)
 │   │   ├── main.tsx                       # Entry point
 │   │   └── index.css                      # Global styles + Tailwind
+│   ├── .env                               # AI API key (NOT in git)
+│   ├── .env.example                       # Template for .env
 │   ├── vite.config.ts                     # host: 127.0.0.1
 │   ├── tailwind.config.js
 │   └── package.json
@@ -104,8 +102,10 @@ language-practice/
 │   ├── cards.json                   # User cards (auto-created, not in git)
 │   ├── package.json
 │   └── .gitignore                   # node_modules/, cards.json
+├── scripts/
+│   └── validate-questions.js        # Pre-build validation for mockQuestions
 ├── deploy.ps1                       # PowerShell: build + scp to server
-├── TODO.md                          # Task checklist (all done)
+├── TODO.md                          # Task checklist
 ├── README.md                        # Quick-start
 └── QWEN.md                          # This file
 ```
@@ -114,11 +114,12 @@ language-practice/
 
 | Page | Route | Purpose |
 |------|-------|---------|
-| Home | `/` | Level/topic selection, custom cards promo, tutorial |
+| Home | `/` | Level/topic/mix selection, custom cards promo, AI tutor promo, tutorial |
 | Learning | `/learning` | Flashcard session (normal questions or custom cards) |
 | My Cards | `/my-cards` | Create, edit, list, practice custom cards (auto-sync) |
 | Statistics | `/statistics` | Stats, achievements, custom cards stats, error list |
 | Review Errors | `/review-errors` | Error review with flashcard-style repeat |
+| AI Tutor | `/ai-tutor` | AI conversation practice with speech synthesis |
 
 ## Key Commands
 
@@ -128,7 +129,8 @@ language-practice/
 cd D:\qwen\language-practice\frontend
 npm install
 npm run dev           # → http://127.0.0.1:5173
-npm run build         # tsc -b && vite build → dist/
+npm run build         # validate-questions && tsc -b && vite build → dist/
+npm run lint          # eslint .
 ```
 
 ### Card Sync Server (on server)
@@ -137,8 +139,9 @@ npm run build         # tsc -b && vite build → dist/
 cd /var/www/english-master/server
 npm install
 npm start             # → http://192.168.199.222:3001
-# Runs in background: npm start &
 ```
+
+Managed by systemd service `english-master-server` (auto-start, auto-restart).
 
 ### Deploy to Server
 
@@ -156,9 +159,9 @@ git add -A; git commit -m "message"; git push
 
 ## Data Flow
 
-### Quiz Questions (53 embedded)
+### Quiz Questions (100 embedded)
 ```
-Home → select level/topic → startSession()
+Home → select level/topic/mix → startSession()
   → filter mockQuestions → shuffle → LearningSession
   → answer → submitAnswer() → update stats + check achievements
   → nextQuestion → results
@@ -173,6 +176,14 @@ My Cards → create card → userCardsService.addCard()
 Open from another device → userCardsService.getAll()
   → GET /api/cards → load from server → cache in localStorage
   → Server unavailable → fallback to localStorage cache
+```
+
+### AI Tutor
+```
+AI Tutor → type message → send to OpenRouter API
+  → system prompt (Spoken English Teacher) + conversation history
+  → GPT-4o-mini responds (≤100 words, corrects errors, asks question)
+  → user can click 🔊 to hear response spoken aloud (SpeechSynthesis API)
 ```
 
 ### Achievements
@@ -199,16 +210,16 @@ submitAnswer() → checkAchievements()
 
 ## Question Data (mockQuestions.ts)
 
-53 questions:
+100 questions:
 
 | Level | Multiple Choice | Construction | Total |
 |-------|----------------|-------------|-------|
-| 🌱 Beginner | 13 | 4 | 17 |
-| 🌿 Intermediate | 9 | 5 | 14 |
-| 🌳 Advanced | 9 | 6 | 15 |
-| + mixed | 4 | 3 | 7 |
+| 🌱 Beginner | 24 | 10 | 34 |
+| 🌿 Intermediate | 20 | 13 | 33 |
+| 🌳 Advanced | 20 | 13 | 33 |
+| **Итого** | **64** | **36** | **100** |
 
-**By topic:** ✈️ Travel (13), 🍕 Food (7), 💼 Business (13), 📖 Grammar (10)
+**By topic:** ✈️ Travel, 🍕 Food, 💼 Business, 📖 Grammar
 
 ## Achievement System (10 badges)
 
@@ -217,13 +228,36 @@ submitAnswer() → checkAchievements()
 | Первый шаг | 🏅 | Answer first question |
 | Серия 10 | 🔥 | 10 correct in a row |
 | На огне | 💥 | 25 correct in a row |
-| Марафонец | 📚 | Answer all 53 questions |
+| Марафонец | 📚 | Answer all 100 questions |
 | Чистая работа | 💪 | Clear all errors |
 | Коллекционер | 🎨 | Create 20 custom cards |
 | Мастер Beginner | 🌱 | 80%+ on Beginner |
 | Pro Intermediate | 🌿 | 80%+ on Intermediate |
 | Эксперт Advanced | 🌳 | 80%+ on Advanced |
 | Мастер карточек | ⭐ | 80%+ on custom cards (min 10) |
+
+## AI Tutor
+
+### Configuration (`.env`)
+
+```
+VITE_AI_API_KEY=sk-or-v1-...
+VITE_AI_MODEL=openai/gpt-4o-mini
+```
+
+### System Prompt
+Uses the "Spoken English Teacher and Improver" prompt from prompts.chat:
+- Responds in English, ≤100 words
+- Strictly corrects grammar, typos, factual errors
+- Always asks a question to keep conversation going
+
+### Topics
+6 conversation scenarios: Free, Restaurant, Airport, Shopping, Doctor, Interview
+
+### Speech Synthesis
+- Browser built-in `SpeechSynthesis` API (no external dependencies)
+- `en-US` language, 0.9 rate (slightly slower for learning)
+- 🔊 button on each AI response, ⏹️ to stop
 
 ## Custom Cards Sync
 
@@ -241,3 +275,4 @@ submitAnswer() → checkAchievements()
 - **PascalCase** components, files match component names
 - **Async userCardsService** — all CRUD operations are async with server auto-sync
 - **No auth** — all pages are public, no JWT, no registration
+- **Pre-build validation** — `scripts/validate-questions.js` checks all 100 questions before every build

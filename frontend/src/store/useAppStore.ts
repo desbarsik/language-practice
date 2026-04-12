@@ -37,6 +37,7 @@ interface AppState {
 
   // Actions
   startSession: (level: Level, topic?: string) => Promise<void>;
+  startMixedSession: () => Promise<void>;
   nextQuestion: () => void;
   submitAnswer: (isCorrect: boolean, questionId: string, isCustomCard?: boolean) => void;
   updateCustomCardStats: (isCorrect: boolean) => CustomCardsSessionStats;
@@ -76,6 +77,27 @@ export const useAppStore = create<AppState>((set, get) => {
         currentQuestionIndex: 0,
         selectedLevel: level,
         selectedTopic: topic || null,
+        isSessionActive: true,
+        showResults: false,
+        isLoading: false,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error occurred';
+      set({ error: message, isLoading: false });
+    }
+  },
+
+  startMixedSession: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      // All 100 questions shuffled
+      const shuffled = [...mockQuestions].sort(() => Math.random() - 0.5);
+
+      set({
+        questions: shuffled,
+        currentQuestionIndex: 0,
+        selectedLevel: null,
+        selectedTopic: null,
         isSessionActive: true,
         showResults: false,
         isLoading: false,

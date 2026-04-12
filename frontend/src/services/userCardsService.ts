@@ -1,6 +1,6 @@
 import type { CustomCard } from '../types';
 
-const API_BASE = import.meta.env.VITE_CARDS_API || 'http://192.168.199.222:3001';
+const API_BASE = import.meta.env.VITE_CARDS_API || (import.meta.env.DEV ? 'http://127.0.0.1:3001' : 'http://192.168.199.222:3001');
 const CACHE_KEY = 'english_master_user_cards_cache';
 const OLD_KEY = 'english_master_user_cards';
 

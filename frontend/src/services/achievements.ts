@@ -52,9 +52,9 @@ export const achievements: Achievement[] = [
   {
     id: 'marathon',
     title: 'Марафонец',
-    description: 'Ответьте на все 53 вопроса',
+    description: 'Ответьте на все 100 вопросов',
     icon: '📚',
-    check: (s) => s.totalAnswered >= 53,
+    check: (s) => s.totalAnswered >= 100,
   },
   {
     id: 'clean_slate',

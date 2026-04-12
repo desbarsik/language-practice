@@ -5,6 +5,7 @@ import { LearningSession } from './pages/LearningSession';
 import { Statistics } from './pages/Statistics';
 import { MyCards } from './pages/MyCards';
 import { ReviewErrors } from './pages/ReviewErrors';
+import { AiTutor } from './pages/AiTutor';
 import { AchievementNotification } from './components/common/AchievementNotification';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
           <Route path="/statistics" element={<Statistics />} />
           <Route path="/my-cards" element={<MyCards />} />
           <Route path="/review-errors" element={<ReviewErrors />} />
+          <Route path="/ai-tutor" element={<AiTutor />} />
         </Routes>
       </Layout>
     </BrowserRouter>

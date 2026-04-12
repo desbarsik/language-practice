@@ -15,6 +15,9 @@ export const MultipleChoice: React.FC<MultipleChoiceProps> = ({
   onSelect,
   disabled = false,
 }) => {
+  // Use composite key (index + value) to handle duplicate option values
+  const keys = options.map((opt, i) => `${i}-${opt}`);
+
   return (
     <div className="w-full space-y-4">
       <p className="text-lg font-medium text-gray-900 dark:text-white text-center">
@@ -23,7 +26,7 @@ export const MultipleChoice: React.FC<MultipleChoiceProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
         {options.map((option, index) => (
           <button
-            key={index}
+            key={keys[index]}
             onClick={() => onSelect(option)}
             disabled={disabled}
             className={`p-4 rounded-lg border-2 text-left transition-all duration-200 ${
