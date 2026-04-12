@@ -14,7 +14,10 @@
       "Bash(yarn *)",
       "mcp__prompts.chat__search_prompts",
       "mcp__prompts.chat__get_prompt",
-      "Bash(sudo *)"
+      "Bash(sudo *)",
+      "Bash(.\\deploy.ps1)",
+      "Bash(ssh *)",
+      "Bash(scp *)"
     ]
   },
   "mcpServers": {
